@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import JSZip from 'jszip'
 
 interface MediaFile {
   name: string
@@ -200,13 +201,20 @@ export default function MediaPage() {
   }
 
   async function handleBulkDownload() {
-    for (const name of selected) {
-      const file = files.find(f => f.name === name)
-      if (file) {
-        await downloadFile(file)
-        await new Promise(r => setTimeout(r, 300))
-      }
-    }
+    const toDownload = files.filter(f => selected.has(f.name))
+    if (toDownload.length === 1) { await downloadFile(toDownload[0]); return }
+    const zip = new JSZip()
+    await Promise.all(toDownload.map(async file => {
+      const res = await fetch(file.url)
+      zip.file(file.name, await res.blob())
+    }))
+    const blob = await zip.generateAsync({ type: 'blob' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `media-${toDownload.length}-images.zip`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function toggleSelect(name: string, localIdx: number, shiftKey: boolean) {
