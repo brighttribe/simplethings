@@ -15,7 +15,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       .select('*, blog_post_tags(blog_tags(id, name, slug)), blog_post_categories(categories(id, name, slug))')
       .eq('id', id)
       .single(),
-    db.from('categories').select('*').order('name'),
+    db.from('categories').select('id, name, slug, parent_id, sort_order, description, image_url, created_at').order('name'),
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_hero', true),
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_featured', true),
   ])

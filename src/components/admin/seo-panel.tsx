@@ -49,7 +49,33 @@ export default function SeoPanel({
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  const [creatingTag, setCreatingTag] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleAddTag() {
+    const name = tagInput.trim()
+    if (!name) return
+    const existing = allTags.find(t => t.name.toLowerCase() === name.toLowerCase())
+    if (existing) { onTagToggle(existing.id); setTagInput(''); return }
+    setCreatingTag(true)
+    const res = await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    if (res.ok) { const tag = await res.json(); onTagCreate(tag) }
+    setTagInput('')
+    setCreatingTag(false)
+  }
+
+  const sortedCategories = (() => {
+    const parents = categories.filter(c => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name))
+    return parents.flatMap(p => [
+      p,
+      ...categories.filter(c => c.parent_id === p.id).sort((a, b) => a.name.localeCompare(b.name)),
+    ])
+  })()
 
   async function uploadFile(file: File) {
     if (!file.type.startsWith('image/')) return
@@ -251,19 +277,21 @@ export default function SeoPanel({
 
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <p className="text-xs font-medium text-gray-700 mb-2">Categories</p>
-        <div className="space-y-1.5">
-          {categories.map(cat => (
-            <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={selectedCategoryIds.includes(cat.id)} onChange={() => onCategoryToggle(cat.id)} className="rounded" />
-              <span className="text-xs text-gray-700">{cat.name}</span>
+        <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-48 p-2 space-y-1">
+          {sortedCategories.map(cat => (
+            <label key={cat.id} className={`flex items-center gap-2 cursor-pointer rounded px-1 py-0.5 hover:bg-gray-50 ${cat.parent_id ? 'pl-5' : ''}`}>
+              <input type="checkbox" checked={selectedCategoryIds.includes(cat.id)} onChange={() => onCategoryToggle(cat.id)}
+                className="rounded border-gray-300 text-gray-900 focus:ring-0 shrink-0" />
+              <span className={`text-xs ${cat.parent_id ? 'text-gray-600' : 'text-gray-800 font-medium'}`}>{cat.name}</span>
             </label>
           ))}
+          {categories.length === 0 && <p className="text-xs text-gray-400 px-1">No categories yet.</p>}
         </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <p className="text-xs font-medium text-gray-700 mb-2">Tags</p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {allTags.map(tag => (
             <button key={tag.id} onClick={() => onTagToggle(tag.id)}
               className={`px-2 py-1 rounded-full text-xs transition-colors ${
@@ -272,6 +300,19 @@ export default function SeoPanel({
               {tag.name}
             </button>
           ))}
+          {allTags.length === 0 && <p className="text-xs text-gray-400">No tags yet.</p>}
+        </div>
+        <div className="flex gap-1.5">
+          <input
+            type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag() } }}
+            placeholder="Add tag…"
+            className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-gray-400"
+          />
+          <button onClick={handleAddTag} disabled={!tagInput.trim() || creatingTag}
+            className="px-2.5 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
+            Add
+          </button>
         </div>
       </div>
     </div>
