@@ -9,12 +9,17 @@ interface MediaFile {
   url: string
 }
 
+const ROWS = 6
+
 export default function MediaPage() {
   const [files, setFiles] = useState<MediaFile[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [preview, setPreview] = useState<MediaFile | null>(null)
+  const [cols, setCols] = useState(4)
+  const [search, setSearch] = useState('')
+  const [visibleRows, setVisibleRows] = useState(ROWS)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchFiles = useCallback(async () => {
@@ -24,6 +29,9 @@ export default function MediaPage() {
   }, [])
 
   useEffect(() => { fetchFiles() }, [fetchFiles])
+
+  // Reset visible rows when search or cols change
+  useEffect(() => { setVisibleRows(ROWS) }, [search, cols])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files
@@ -58,9 +66,19 @@ export default function MediaPage() {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   }
 
+  const filtered = files.filter(f =>
+    f.name.toLowerCase().includes(search.toLowerCase())
+  )
+  const pageSize = cols * visibleRows
+  const visible = filtered.slice(0, pageSize)
+  const hasMore = filtered.length > pageSize
+
+  const gridClass = cols === 3 ? 'grid-cols-3' : cols === 5 ? 'grid-cols-5' : 'grid-cols-4'
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-gray-900">Media Library</h1>
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -73,6 +91,48 @@ export default function MediaPage() {
           {uploading ? 'Uploading...' : 'Upload Images'}
         </button>
         <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} />
+      </div>
+
+      {/* Search + grid toggle */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="relative flex-1 max-w-xs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search images…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
+          {[3, 4, 5].map(n => (
+            <button
+              key={n}
+              onClick={() => setCols(n)}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                cols === n ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs text-gray-400 whitespace-nowrap">
+          {search ? `${filtered.length} of ${files.length}` : `${files.length}`} image{files.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {loading ? (
@@ -88,29 +148,46 @@ export default function MediaPage() {
           <p className="text-sm text-gray-400">No images yet — click to upload</p>
           <p className="text-xs text-gray-300 mt-1">Auto-converted to WebP · 1500px wide</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex items-center justify-center h-40 text-sm text-gray-400">
+          No images match &ldquo;{search}&rdquo;
+        </div>
       ) : (
         <div className="flex gap-5 items-start">
-          <div className="flex-1 grid grid-cols-4 gap-3">
-            {files.map(file => (
-              <div
-                key={file.name}
-                onClick={() => setPreview(preview?.name === file.name ? null : file)}
-                className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                  preview?.name === file.name ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
-                }`}
-              >
-                <img src={file.url} alt={file.name} className="w-full aspect-square object-cover bg-gray-50" />
-                <button
-                  onClick={e => { e.stopPropagation(); handleDelete(file) }}
-                  disabled={deleting === file.url}
-                  className="absolute top-1.5 left-1.5 w-7 h-7 bg-white/90 rounded-full items-center justify-center hidden group-hover:flex hover:bg-red-50 transition-colors shadow-sm"
+          <div className="flex-1 min-w-0">
+            <div className={`grid ${gridClass} gap-3`}>
+              {visible.map(file => (
+                <div
+                  key={file.name}
+                  onClick={() => setPreview(preview?.name === file.name ? null : file)}
+                  className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                    preview?.name === file.name ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
+                  }`}
                 >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-                  </svg>
+                  <img src={file.url} alt={file.name} className="w-full aspect-square object-cover bg-gray-50" />
+                  <button
+                    onClick={e => { e.stopPropagation(); handleDelete(file) }}
+                    disabled={deleting === file.url}
+                    className="absolute top-1.5 left-1.5 w-7 h-7 bg-white/90 rounded-full items-center justify-center hidden group-hover:flex hover:bg-red-50 transition-colors shadow-sm"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => setVisibleRows(r => r + ROWS)}
+                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                >
+                  Load more ({filtered.length - pageSize} remaining)
                 </button>
               </div>
-            ))}
+            )}
           </div>
 
           {preview && (
@@ -136,7 +213,6 @@ export default function MediaPage() {
           )}
         </div>
       )}
-      <p className="mt-4 text-xs text-gray-400">{files.length} image{files.length !== 1 ? 's' : ''}</p>
     </div>
   )
 }
