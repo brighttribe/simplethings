@@ -65,6 +65,7 @@ export default function MediaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dragCounter = useRef(0)
+  const lastSelectedIndex = useRef<number | null>(null)
 
   const fetchFiles = useCallback(async () => {
     const res = await fetch('/api/media')
@@ -73,7 +74,7 @@ export default function MediaPage() {
   }, [])
 
   useEffect(() => { fetchFiles() }, [fetchFiles])
-  useEffect(() => { setPage(1); setSelected(new Set()) }, [search, view, cols])
+  useEffect(() => { setPage(1); setSelected(new Set()); lastSelectedIndex.current = null }, [search, view, cols])
 
   const filtered = files.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
   const pageSize = view === 'grid' ? PAGE_GRID : PAGE_LIST
@@ -208,12 +209,20 @@ export default function MediaPage() {
     }
   }
 
-  function toggleSelect(name: string) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      next.has(name) ? next.delete(name) : next.add(name)
-      return next
-    })
+  function toggleSelect(name: string, localIdx: number, shiftKey: boolean) {
+    if (shiftKey && lastSelectedIndex.current !== null) {
+      const start = Math.min(lastSelectedIndex.current, localIdx)
+      const end = Math.max(lastSelectedIndex.current, localIdx)
+      const range = paginated.slice(start, end + 1).map(f => f.name)
+      setSelected(prev => { const next = new Set(prev); range.forEach(n => next.add(n)); return next })
+    } else {
+      setSelected(prev => {
+        const next = new Set(prev)
+        next.has(name) ? next.delete(name) : next.add(name)
+        return next
+      })
+      lastSelectedIndex.current = localIdx
+    }
   }
 
   function toggleSelectAll() {
@@ -381,8 +390,8 @@ export default function MediaPage() {
                       onClick={() => setPreviewIndex(globalIdx)} />
                     <div className={`absolute top-1.5 left-1.5 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                       <input type="checkbox" checked={isSelected}
-                        onChange={e => { e.stopPropagation(); toggleSelect(file.name) }}
-                        onClick={e => e.stopPropagation()}
+                        onChange={() => {}}
+                        onClick={e => { e.stopPropagation(); toggleSelect(file.name, localIdx, e.shiftKey) }}
                         className="w-4 h-4 rounded border-white bg-white/90 text-gray-900 focus:ring-0 shadow-sm cursor-pointer" />
                     </div>
                   </div>
@@ -415,8 +424,10 @@ export default function MediaPage() {
                   return (
                     <tr key={file.name} className={`group transition-colors ${isSelected ? 'bg-blue-50/40' : 'hover:bg-gray-50/60'}`}>
                       <td className="px-3 py-2.5">
-                        <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(file.name)}
-                          className="rounded border-gray-300 text-gray-900 focus:ring-0" />
+                        <input type="checkbox" checked={isSelected}
+                          onChange={() => {}}
+                          onClick={e => toggleSelect(file.name, localIdx, e.shiftKey)}
+                          className="rounded border-gray-300 text-gray-900 focus:ring-0 cursor-pointer" />
                       </td>
                       <td className="px-2 py-2.5">
                         <img src={file.url} alt={file.alt_text || file.name}
