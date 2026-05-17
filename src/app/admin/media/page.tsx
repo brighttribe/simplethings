@@ -493,7 +493,7 @@ export default function MediaPage() {
 
         {/* Attachment detail overlay */}
         {preview && (
-          <div className="absolute inset-0 bg-white rounded-xl border border-gray-200 shadow-lg flex overflow-hidden z-10" style={{ minHeight: '480px' }}>
+          <div className="absolute top-0 left-0 right-0 bg-white rounded-xl border border-gray-200 shadow-lg flex overflow-hidden z-10" style={{ height: '580px' }}>
             <div className="flex-1 bg-gray-50 flex items-center justify-center p-6 relative">
               <img src={preview.url} alt={altText || preview.name}
                 className="max-w-full max-h-full object-contain rounded-lg shadow-sm" />
