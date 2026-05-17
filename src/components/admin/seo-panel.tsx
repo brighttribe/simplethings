@@ -103,7 +103,7 @@ export default function SeoPanel({
   }
 
   return (
-    <div className="w-72 shrink-0 space-y-4">
+    <div className="w-72 shrink-0 space-y-4 overflow-y-auto h-[calc(100vh-12rem)]">
       <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
         <div className="flex gap-2">
           <button onClick={onSave} disabled={saving}
