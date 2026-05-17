@@ -2,6 +2,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import SiteNav from '@/components/site-nav'
 import SiteFooter from '@/components/site-footer'
 
+export const dynamic = 'force-dynamic'
+
 export interface NavCategory {
   id: string
   name: string
