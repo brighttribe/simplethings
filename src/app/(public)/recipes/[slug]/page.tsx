@@ -9,6 +9,17 @@ import NewsletterForm from '@/components/newsletter-form'
 const SITE_URL = 'https://simplethingsmadebeautiful.com'
 const SITE_NAME = 'Simple Things Made Beautiful'
 
+function toStr(val: unknown): string {
+  if (typeof val === 'string') return val
+  if (val && typeof val === 'object') {
+    const o = val as Record<string, unknown>
+    const text = o.text ?? o.name ?? o.item ?? o.ingredient ?? o.step ?? o.description
+    if (typeof text === 'string') return text
+    return Object.values(o).filter(v => typeof v === 'string').join(' ')
+  }
+  return String(val ?? '')
+}
+
 async function getRecipe(slug: string) {
   const db = createServiceClient()
   const { data } = await db
@@ -95,12 +106,12 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
     ...(recipe.cook_time ? { cookTime: recipe.cook_time } : {}),
     ...(recipe.total_time ? { totalTime: recipe.total_time } : {}),
     ...(recipe.servings ? { recipeYield: recipe.servings } : {}),
-    ...(recipe.ingredients?.length ? { recipeIngredient: recipe.ingredients } : {}),
+    ...(recipe.ingredients?.length ? { recipeIngredient: recipe.ingredients.map(toStr) } : {}),
     ...(recipe.instructions?.length ? {
-      recipeInstructions: recipe.instructions.map((step: string, i: number) => ({
+      recipeInstructions: recipe.instructions.map((step: unknown, i: number) => ({
         '@type': 'HowToStep',
         position: i + 1,
-        text: step,
+        text: toStr(step),
       })),
     } : {}),
   }
@@ -203,10 +214,10 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
               <div className="mb-8">
                 <h2 className="font-serif text-xl font-semibold text-[#1e1c19] mb-4">Ingredients</h2>
                 <ul className="space-y-2">
-                  {recipe.ingredients.map((ing: string, i: number) => (
+                  {recipe.ingredients.map((ing: unknown, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-[#3c3a36]">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#3d5c3a] shrink-0" />
-                      {ing}
+                      {toStr(ing)}
                     </li>
                   ))}
                 </ul>
@@ -218,10 +229,10 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
               <div className="mb-8">
                 <h2 className="font-serif text-xl font-semibold text-[#1e1c19] mb-4">Instructions</h2>
                 <ol className="space-y-4">
-                  {recipe.instructions.map((step: string, i: number) => (
+                  {recipe.instructions.map((step: unknown, i: number) => (
                     <li key={i} className="flex gap-4 text-sm text-[#3c3a36]">
                       <span className="font-serif text-lg font-bold text-[#3d5c3a] shrink-0 w-6 leading-tight">{i + 1}.</span>
-                      <p className="leading-relaxed">{step}</p>
+                      <p className="leading-relaxed">{toStr(step)}</p>
                     </li>
                   ))}
                 </ol>
