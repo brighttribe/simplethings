@@ -107,19 +107,16 @@ export function PostsTable({ posts, allCategories, heroCount, featuredCount }: P
           )}
           {posts.map(post => (
             <>
-              <tr key={post.id} className={`group transition-colors ${openId === post.id ? 'bg-amber-50' : 'odd:bg-white even:bg-[#f2f7f2] hover:bg-[#e8f0e8]'}`}>
+              <tr key={post.id} className="group odd:bg-white even:bg-[#f2f7f2] hover:bg-[#e8f0e8] transition-colors">
                 <td className="px-4 py-2.5">
                   <Link href={`/admin/posts/${post.id}/edit`} className="font-medium text-gray-900 hover:text-stone-600 transition-colors block">
                     {post.title}
                   </Link>
-                  <div className="flex items-center gap-3 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => openQuickEdit(post)}
                       className="text-[11px] text-blue-600 hover:text-blue-800 hover:underline">
                       {openId === post.id ? 'Cancel' : 'Quick Edit'}
                     </button>
-                    <Link href={`/admin/posts/${post.id}/edit`} className="text-[11px] text-blue-600 hover:text-blue-800 hover:underline">
-                      Edit
-                    </Link>
                   </div>
                 </td>
                 <td className="px-4 py-2.5">
@@ -153,33 +150,32 @@ export function PostsTable({ posts, allCategories, heroCount, featuredCount }: P
               {openId === post.id && (
                 <tr key={`qe-${post.id}`}>
                   <td colSpan={5} className="p-0">
-                    <div className="bg-amber-50 border-y border-amber-200 px-6 py-5">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Quick Edit</p>
-                      <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-gray-50 border-y border-gray-200 px-6 py-4">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-0">
 
                         {/* Left: core fields */}
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Title</label>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <label className="w-12 text-xs text-gray-500 text-right shrink-0">Title</label>
                             <input type="text" value={qeTitle} onChange={e => handleTitleChange(e.target.value)}
-                              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
+                              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
                           </div>
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Slug</label>
+                          <div className="flex items-center gap-3">
+                            <label className="w-12 text-xs text-gray-500 text-right shrink-0">Slug</label>
                             <input type="text" value={qeSlug}
                               onChange={e => { slugManual.current = true; setQeSlug(e.target.value) }}
-                              className="w-full text-xs font-mono border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
+                              className="flex-1 text-xs font-mono border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
                           </div>
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Status</label>
+                          <div className="flex items-center gap-3">
+                            <label className="w-12 text-xs text-gray-500 text-right shrink-0">Status</label>
                             <select value={qeStatus} onChange={e => setQeStatus(e.target.value)}
-                              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white">
+                              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white">
                               <option value="draft">Draft</option>
                               <option value="scheduled">Scheduled</option>
                               <option value="published">Published</option>
                             </select>
                           </div>
-                          <div className="flex gap-2 pt-1">
+                          <div className="flex gap-2 pl-15 pt-1" style={{ paddingLeft: '60px' }}>
                             <button onClick={handleSave} disabled={saving}
                               className="px-4 py-1.5 text-sm font-medium text-white bg-[#3d5c3a] rounded-lg hover:bg-[#2e4529] disabled:opacity-50 transition-colors">
                               {saving ? 'Saving…' : 'Update'}
@@ -192,9 +188,9 @@ export function PostsTable({ posts, allCategories, heroCount, featuredCount }: P
                         </div>
 
                         {/* Right: categories */}
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Categories</label>
-                          <div className="border border-gray-200 rounded-lg bg-white overflow-y-auto max-h-44 p-2 space-y-0.5">
+                        <div className="flex gap-3">
+                          <label className="w-20 text-xs text-gray-500 text-right shrink-0 pt-1">Categories</label>
+                          <div className="flex-1 border border-gray-200 rounded-lg bg-white overflow-y-auto max-h-36 p-2 space-y-0.5">
                             {sortedCategories.map(cat => (
                               <label key={cat.id} className={`flex items-center gap-2 cursor-pointer rounded px-1 py-0.5 hover:bg-gray-50 ${cat.parent_id ? 'pl-5' : ''}`}>
                                 <input type="checkbox" checked={qeCategoryIds.includes(cat.id)} onChange={() => toggleCategory(cat.id)}
