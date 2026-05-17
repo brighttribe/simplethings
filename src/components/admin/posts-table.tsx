@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { HeroFeaturedToggle } from '@/components/admin/hero-featured-toggle'
 import { DeleteRowButton } from '@/components/admin/delete-row-button'
-import type { Category, BlogTag } from '@/lib/types'
+import type { Category } from '@/lib/types'
 
 interface PostRow {
   id: string
@@ -23,7 +23,6 @@ interface PostRow {
 interface Props {
   posts: PostRow[]
   allCategories: Category[]
-  allTags: BlogTag[]
   heroCount: number
   featuredCount: number
 }
@@ -36,20 +35,15 @@ function buildCategoryTree(categories: Category[]) {
   ])
 }
 
-export function PostsTable({ posts, allCategories, allTags: initialTags, heroCount, featuredCount }: Props) {
+export function PostsTable({ posts, allCategories, heroCount, featuredCount }: Props) {
   const router = useRouter()
   const [openId, setOpenId] = useState<string | null>(null)
-  const [allTags, setAllTags] = useState<BlogTag[]>(initialTags)
-
   // Quick edit form state
   const [qeTitle, setQeTitle] = useState('')
   const [qeSlug, setQeSlug] = useState('')
   const [qeStatus, setQeStatus] = useState('draft')
   const [qeCategoryIds, setQeCategoryIds] = useState<string[]>([])
-  const [qeTagIds, setQeTagIds] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
   const [saving, setSaving] = useState(false)
-  const [creatingTag, setCreatingTag] = useState(false)
   const slugManual = useRef(false)
 
   const sortedCategories = buildCategoryTree(allCategories)
@@ -60,14 +54,8 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
     setQeSlug((post as PostRow & { slug?: string }).slug ?? '')
     setQeStatus(post.status)
     setQeCategoryIds(post.blog_post_categories.map(c => c.category_id))
-    setQeTagIds([])
-    setTagInput('')
     slugManual.current = false
     setOpenId(post.id)
-    // Fetch current tags for this post
-    fetch(`/api/posts/${post.id}/tags`).then(r => r.json()).then((tags: BlogTag[]) => {
-      setQeTagIds(tags.map(t => t.id))
-    })
   }
 
   function handleTitleChange(val: string) {
@@ -79,30 +67,6 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
 
   function toggleCategory(id: string) {
     setQeCategoryIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-  }
-
-  function toggleTag(id: string) {
-    setQeTagIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-  }
-
-  async function handleAddTag() {
-    const name = tagInput.trim()
-    if (!name) return
-    const existing = allTags.find(t => t.name.toLowerCase() === name.toLowerCase())
-    if (existing) { toggleTag(existing.id); setTagInput(''); return }
-    setCreatingTag(true)
-    const res = await fetch('/api/tags', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    })
-    if (res.ok) {
-      const tag: BlogTag = await res.json()
-      setAllTags(prev => [...prev, tag].sort((a, b) => a.name.localeCompare(b.name)))
-      setQeTagIds(prev => [...prev, tag.id])
-    }
-    setTagInput('')
-    setCreatingTag(false)
   }
 
   async function handleSave() {
@@ -118,11 +82,6 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category_ids: qeCategoryIds }),
-      }),
-      fetch(`/api/posts/${openId}/tags`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tag_ids: qeTagIds }),
       }),
     ])
     setSaving(false)
@@ -196,7 +155,7 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
                   <td colSpan={5} className="p-0">
                     <div className="bg-amber-50 border-y border-amber-200 px-6 py-5">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Quick Edit</p>
-                      <div className="grid grid-cols-3 gap-6">
+                      <div className="grid grid-cols-2 gap-6">
 
                         {/* Left: core fields */}
                         <div className="space-y-3">
@@ -232,7 +191,7 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
                           </div>
                         </div>
 
-                        {/* Middle: categories */}
+                        {/* Right: categories */}
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">Categories</label>
                           <div className="border border-gray-200 rounded-lg bg-white overflow-y-auto max-h-44 p-2 space-y-0.5">
@@ -243,32 +202,6 @@ export function PostsTable({ posts, allCategories, allTags: initialTags, heroCou
                                 <span className={`text-xs ${cat.parent_id ? 'text-gray-600' : 'text-gray-800 font-medium'}`}>{cat.name}</span>
                               </label>
                             ))}
-                          </div>
-                        </div>
-
-                        {/* Right: tags */}
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">Tags</label>
-                          <div className="flex flex-wrap gap-1.5 mb-2 min-h-[2rem]">
-                            {allTags.map(tag => (
-                              <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
-                                className={`px-2 py-0.5 rounded-full text-xs transition-colors ${
-                                  qeTagIds.includes(tag.id) ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}>
-                                {tag.name}
-                              </button>
-                            ))}
-                            {allTags.length === 0 && <span className="text-xs text-gray-400">No tags yet.</span>}
-                          </div>
-                          <div className="flex gap-1.5">
-                            <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
-                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag() } }}
-                              placeholder="Add tag…"
-                              className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
-                            <button type="button" onClick={handleAddTag} disabled={!tagInput.trim() || creatingTag}
-                              className="px-2.5 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
-                              Add
-                            </button>
                           </div>
                         </div>
                       </div>

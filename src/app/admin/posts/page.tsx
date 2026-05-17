@@ -31,13 +31,11 @@ export default async function PostsPage({
   const [
     { data: posts, count },
     { data: allCategories },
-    { data: allTags },
     { count: heroCount },
     { count: featuredCount },
   ] = await Promise.all([
     query,
     db.from('categories').select('id, name, slug, parent_id, sort_order, description, image_url, created_at').order('name'),
-    db.from('blog_tags').select('*').order('name'),
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_hero', true),
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_featured', true),
   ])
@@ -85,7 +83,6 @@ export default async function PostsPage({
       <PostsTable
         posts={(posts ?? []) as Parameters<typeof PostsTable>[0]['posts']}
         allCategories={allCategories ?? []}
-        allTags={allTags ?? []}
         heroCount={heroCount ?? 0}
         featuredCount={featuredCount ?? 0}
       />
