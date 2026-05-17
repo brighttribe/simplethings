@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import { SearchBar } from '@/components/admin/search-bar'
 import { DeleteRowButton } from '@/components/admin/delete-row-button'
 import { CategorySelect } from '@/components/admin/category-select'
+import { HeroFeaturedToggle } from '@/components/admin/hero-featured-toggle'
 
 const PAGE_SIZES = [10, 20, 50, 100]
 
@@ -23,7 +24,7 @@ export default async function PostsPage({
   const db = createServiceClient()
   let query = db
     .from('blog_posts')
-    .select('id, title, status, published_at, created_at, blog_post_categories(category_id)', { count: 'exact' })
+    .select('id, title, status, published_at, created_at, is_hero, is_featured, featured_order, blog_post_categories(category_id)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, from + perPage - 1)
 
@@ -31,9 +32,11 @@ export default async function PostsPage({
     query = query.ilike('title', `%${q}%`)
   }
 
-  const [{ data: posts, count }, { data: allCategories }] = await Promise.all([
+  const [{ data: posts, count }, { data: allCategories }, { count: heroCount }, { count: featuredCount }] = await Promise.all([
     query,
     db.from('categories').select('id, name').order('name'),
+    db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_hero', true),
+    db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_featured', true),
   ])
 
   const total = count ?? 0
@@ -88,6 +91,7 @@ export default async function PostsPage({
             <tr>
               <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Title</th>
               <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Category</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Homepage</th>
               <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-24">Status</th>
               <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Date</th>
               <th className="px-4 py-3 w-12"></th>
@@ -95,10 +99,11 @@ export default async function PostsPage({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {posts?.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">No posts found</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No posts found</td></tr>
             )}
             {posts?.map(post => {
               const currentCategoryId = (post.blog_post_categories as { category_id: string }[])?.[0]?.category_id ?? null
+              const p = post as typeof post & { is_hero: boolean; is_featured: boolean; featured_order: number | null }
               return (
                 <tr key={post.id} className="odd:bg-white even:bg-[#f2f7f2] hover:bg-[#e8f0e8] transition-colors">
                   <td className="px-4 py-2.5">
@@ -112,6 +117,16 @@ export default async function PostsPage({
                       currentCategoryId={currentCategoryId}
                       categories={allCategories ?? []}
                       apiPath="/api/posts"
+                    />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <HeroFeaturedToggle
+                      postId={post.id}
+                      isHero={p.is_hero ?? false}
+                      isFeatured={p.is_featured ?? false}
+                      featuredOrder={p.featured_order}
+                      heroSlotTaken={(heroCount ?? 0) >= 1 && !p.is_hero}
+                      featuredSlotsFull={(featuredCount ?? 0) >= 2 && !p.is_featured}
                     />
                   </td>
                   <td className="px-4 py-2.5">
