@@ -23,8 +23,9 @@ interface PostRow {
 interface Props {
   posts: PostRow[]
   allCategories: Category[]
-  heroCount: number
-  featuredCount: number
+  heroPostId: string | null
+  leftPostId: string | null
+  rightPostId: string | null
 }
 
 function buildCategoryTree(categories: Category[]) {
@@ -35,7 +36,7 @@ function buildCategoryTree(categories: Category[]) {
   ])
 }
 
-export function PostsTable({ posts, allCategories, heroCount, featuredCount }: Props) {
+export function PostsTable({ posts, allCategories, heroPostId, leftPostId, rightPostId }: Props) {
   const router = useRouter()
   const [openId, setOpenId] = useState<string | null>(null)
   // Quick edit form state
@@ -125,8 +126,9 @@ export function PostsTable({ posts, allCategories, heroCount, featuredCount }: P
                     isHero={post.is_hero ?? false}
                     isFeatured={post.is_featured ?? false}
                     featuredOrder={post.featured_order}
-                    heroSlotTaken={heroCount >= 1 && !post.is_hero}
-                    featuredSlotsFull={featuredCount >= 2 && !post.is_featured}
+                    heroPostId={heroPostId}
+                    leftPostId={leftPostId}
+                    rightPostId={rightPostId}
                   />
                 </td>
                 <td className="px-4 py-2.5">

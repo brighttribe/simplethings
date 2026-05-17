@@ -31,14 +31,18 @@ export default async function PostsPage({
   const [
     { data: posts, count },
     { data: allCategories },
-    { count: heroCount },
-    { count: featuredCount },
+    { data: heroPost },
+    { data: featuredPosts },
   ] = await Promise.all([
     query,
     db.from('categories').select('id, name, slug, parent_id, sort_order, description, image_url, created_at').order('name'),
-    db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_hero', true),
-    db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('is_featured', true),
+    db.from('blog_posts').select('id').eq('is_hero', true).maybeSingle(),
+    db.from('blog_posts').select('id, featured_order').eq('is_featured', true),
   ])
+
+  const heroPostId = heroPost?.id ?? null
+  const leftPostId = featuredPosts?.find(p => p.featured_order === 1)?.id ?? null
+  const rightPostId = featuredPosts?.find(p => p.featured_order === 2)?.id ?? null
 
   const total = count ?? 0
   const totalPages = Math.max(1, Math.ceil(total / perPage))
@@ -83,8 +87,9 @@ export default async function PostsPage({
       <PostsTable
         posts={(posts ?? []) as Parameters<typeof PostsTable>[0]['posts']}
         allCategories={allCategories ?? []}
-        heroCount={heroCount ?? 0}
-        featuredCount={featuredCount ?? 0}
+        heroPostId={heroPostId}
+        leftPostId={leftPostId}
+        rightPostId={rightPostId}
       />
 
       {/* Pagination */}

@@ -8,11 +8,12 @@ interface Props {
   isHero: boolean
   isFeatured: boolean
   featuredOrder: number | null
-  heroSlotTaken: boolean
-  featuredSlotsFull: boolean
+  heroPostId: string | null
+  leftPostId: string | null
+  rightPostId: string | null
 }
 
-export function HeroFeaturedToggle({ postId, isHero, isFeatured, featuredOrder, heroSlotTaken, featuredSlotsFull }: Props) {
+export function HeroFeaturedToggle({ postId, isHero, isFeatured, featuredOrder, heroPostId, leftPostId, rightPostId }: Props) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
 
@@ -27,42 +28,55 @@ export function HeroFeaturedToggle({ postId, isHero, isFeatured, featuredOrder, 
     setSaving(false)
   }
 
-  return (
-    <div className="flex items-center gap-1.5">
-      {/* Hero toggle */}
-      <button
-        disabled={saving || (heroSlotTaken && !isHero)}
-        onClick={() => patch({ is_hero: !isHero })}
-        title={heroSlotTaken && !isHero ? 'Hero slot taken' : isHero ? 'Unset hero' : 'Set as hero'}
-        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-          isHero
-            ? 'bg-amber-400 text-amber-900'
-            : heroSlotTaken
-            ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-            : 'bg-gray-100 text-gray-400 hover:bg-amber-100 hover:text-amber-700'
-        }`}
-      >
-        Hero
-      </button>
+  const heroTaken = heroPostId !== null && heroPostId !== postId
+  const leftActive = isFeatured && featuredOrder === 1
+  const rightActive = isFeatured && featuredOrder === 2
+  const leftTaken = leftPostId !== null && leftPostId !== postId
+  const rightTaken = rightPostId !== null && rightPostId !== postId
 
-      {/* Featured toggle */}
-      <button
-        disabled={saving || (featuredSlotsFull && !isFeatured)}
-        onClick={() => patch({
-          is_featured: !isFeatured,
-          featured_order: !isFeatured ? (featuredOrder ?? 1) : null,
-        })}
-        title={featuredSlotsFull && !isFeatured ? 'Both featured slots taken' : isFeatured ? 'Unset featured' : 'Set as featured'}
-        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-          isFeatured
-            ? 'bg-blue-400 text-blue-900'
-            : featuredSlotsFull
-            ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-            : 'bg-gray-100 text-gray-400 hover:bg-blue-100 hover:text-blue-700'
-        }`}
-      >
-        {isFeatured ? `F${featuredOrder ?? ''}` : 'Feat'}
-      </button>
+  return (
+    <div className="flex items-center gap-3">
+      {/* Hero checkbox */}
+      <label className={`flex items-center gap-1.5 ${heroTaken ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}>
+        <input
+          type="checkbox"
+          checked={isHero}
+          disabled={saving || heroTaken}
+          onChange={() => patch({ is_hero: !isHero })}
+          className="rounded border-gray-300 text-gray-900 focus:ring-0 cursor-pointer disabled:cursor-not-allowed"
+        />
+        <span className="text-xs text-gray-600">Hero</span>
+      </label>
+
+      {/* Featured Left / Right */}
+      <div className="flex items-center gap-1">
+        <button
+          disabled={saving || leftTaken}
+          onClick={() => patch({ is_featured: !leftActive, featured_order: !leftActive ? 1 : null })}
+          className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${
+            leftActive
+              ? 'bg-blue-500 text-white'
+              : leftTaken
+              ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              : 'bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600'
+          }`}
+        >
+          Left
+        </button>
+        <button
+          disabled={saving || rightTaken}
+          onClick={() => patch({ is_featured: !rightActive, featured_order: !rightActive ? 2 : null })}
+          className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${
+            rightActive
+              ? 'bg-blue-500 text-white'
+              : rightTaken
+              ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              : 'bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600'
+          }`}
+        >
+          Right
+        </button>
+      </div>
     </div>
   )
 }
