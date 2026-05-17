@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { NextResponse } from 'next/server'
+import sharp from 'sharp'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -11,12 +12,18 @@ export async function POST(request: Request) {
   const file = formData.get('file') as File
   if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 })
 
-  const ext = file.name.split('.').pop()
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  const webpBuffer = await sharp(buffer)
+    .resize({ width: 1500, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer()
+
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.webp`
 
   const db = createServiceClient()
-  const { error } = await db.storage.from('media').upload(filename, file, {
-    contentType: file.type,
+  const { error } = await db.storage.from('media').upload(filename, webpBuffer, {
+    contentType: 'image/webp',
     upsert: false,
   })
 

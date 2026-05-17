@@ -10,9 +10,11 @@ import type { BlogPost, BlogTag, Category } from '@/lib/types'
 interface PostEditorProps {
   post: BlogPost
   categories: Category[]
+  heroCount: number
+  featuredCount: number
 }
 
-export default function PostEditor({ post, categories }: PostEditorProps) {
+export default function PostEditor({ post, categories, heroCount, featuredCount }: PostEditorProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isDuplicate = searchParams.get('duplicate') === 'true'
@@ -34,6 +36,9 @@ export default function PostEditor({ post, categories }: PostEditorProps) {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     () => (post.blog_post_categories || []).flatMap(pc => pc.categories ? [pc.categories.id] : [])
   )
+  const [isHero, setIsHero] = useState<boolean>((post as unknown as Record<string, unknown>).is_hero as boolean ?? false)
+  const [isFeatured, setIsFeatured] = useState<boolean>((post as unknown as Record<string, unknown>).is_featured as boolean ?? false)
+  const [featuredOrder, setFeaturedOrder] = useState<number | null>((post as unknown as Record<string, unknown>).featured_order as number | null ?? null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const [codeView, setCodeView] = useState(false)
@@ -134,6 +139,9 @@ export default function PostEditor({ post, categories }: PostEditorProps) {
       status,
       scheduled_at: scheduledAt || null,
       published_at: publishedAt || null,
+      is_hero: isHero,
+      is_featured: isFeatured,
+      featured_order: isFeatured ? featuredOrder : null,
       ...overrides,
     }
   }
@@ -561,6 +569,11 @@ export default function PostEditor({ post, categories }: PostEditorProps) {
           status={status}
           scheduledAt={scheduledAt}
           publishedAt={publishedAt}
+          isHero={isHero}
+          heroCount={heroCount}
+          isFeatured={isFeatured}
+          featuredOrder={featuredOrder}
+          featuredCount={featuredCount}
           categories={categories}
           selectedCategoryIds={selectedCategoryIds}
           allTags={allTags}
@@ -573,6 +586,8 @@ export default function PostEditor({ post, categories }: PostEditorProps) {
           onStatusChange={setStatus}
           onScheduledAtChange={setScheduledAt}
           onPublishedAtChange={setPublishedAt}
+          onHeroChange={setIsHero}
+          onFeaturedChange={(f, o) => { setIsFeatured(f); setFeaturedOrder(o) }}
           onCategoryToggle={handleCategoryToggle}
           onTagToggle={handleTagToggle}
           onTagCreate={handleTagCreate}

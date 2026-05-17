@@ -1,9 +1,6 @@
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
-
 -- Categories (blog)
 create table categories (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
   description text,
@@ -13,7 +10,7 @@ create table categories (
 
 -- Blog posts
 create table blog_posts (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   subtitle text,
   slug text not null unique,
@@ -29,7 +26,7 @@ create table blog_posts (
 
 -- Blog tags
 create table blog_tags (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
   created_at timestamptz default now()
@@ -51,7 +48,7 @@ create table blog_post_tags (
 
 -- Recipe categories
 create table recipe_categories (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
   description text,
@@ -61,7 +58,7 @@ create table recipe_categories (
 
 -- Recipes
 create table recipes (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   title text not null,
   slug text not null unique,
   description text,
@@ -89,7 +86,7 @@ create table recipe_category_map (
 
 -- Contact form submissions
 create table contact_submissions (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   first_name text not null,
   last_name text not null,
   email text not null,
