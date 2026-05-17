@@ -9,11 +9,6 @@ import NewsletterForm from '@/components/newsletter-form'
 const SITE_URL = 'https://simplethingsmadebeautiful.com'
 const SITE_NAME = 'Simple Things Made Beautiful'
 
-function formatDate(d: string | null) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-}
-
 async function getRecipe(slug: string) {
   const db = createServiceClient()
   const { data } = await db
@@ -158,8 +153,6 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
             </h1>
             <div className="flex items-center gap-3 text-xs text-gray-400 mb-5">
               <span>By Holly Dempsey</span>
-              <span>·</span>
-              <span>{formatDate(recipe.published_at)}</span>
             </div>
 
             {/* Featured image */}
@@ -282,7 +275,6 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors line-clamp-2">{p.title}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{formatDate(p.published_at)}</p>
                     </div>
                   </Link>
                 ))}
@@ -322,7 +314,6 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
                       : <div className="w-full h-full bg-[#c8d9c5]" />}
                   </div>
                   <p className="font-serif text-sm font-semibold text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors">{r.title}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">{formatDate(r.published_at)}</p>
                 </Link>
               ))}
             </div>

@@ -6,16 +6,11 @@ export const metadata = {
   title: 'Recipes',
 }
 
-function formatDate(d: string | null) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-}
-
 export default async function RecipesPage() {
   const db = createServiceClient()
   const { data: recipes } = await db
     .from('recipes')
-    .select('id, title, slug, featured_image_url, published_at, description')
+    .select('id, title, slug, featured_image_url, description')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
@@ -59,7 +54,6 @@ export default async function RecipesPage() {
                   {recipe.description && (
                     <p className="text-sm text-[#a8a098] line-clamp-2">{recipe.description}</p>
                   )}
-                  <p className="text-xs text-[#a8a098] mt-2">{formatDate(recipe.published_at)}</p>
                 </div>
               </Link>
             ))}
