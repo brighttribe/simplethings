@@ -1,6 +1,8 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { createClient } from '@/lib/supabase/server'
 import SiteNav from '@/components/site-nav'
 import SiteFooter from '@/components/site-footer'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,10 +17,17 @@ export interface NavCategory {
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const db = createServiceClient()
 
-  const [{ data: allCats }, { data: publishedPosts }] = await Promise.all([
+  const [{ data: allCats }, { data: publishedPosts }, { data: setting }] = await Promise.all([
     db.from('categories').select('id, name, slug, parent_id, sort_order').order('sort_order'),
     db.from('blog_posts').select('id').eq('status', 'published'),
+    db.from('site_settings').select('value').eq('key', 'coming_soon').single(),
   ])
+
+  if (setting?.value === 'true') {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/coming-soon')
+  }
 
   const pubIds = (publishedPosts ?? []).map(p => p.id)
   let activeCatIds = new Set<string>()

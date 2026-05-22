@@ -1,16 +1,20 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth } from '@/lib/auth'
 import Link from 'next/link'
+import ComingSoonToggle from '@/components/coming-soon-toggle'
 
 export default async function AdminDashboard() {
   await requireAuth()
   const db = createServiceClient()
 
-  const [postsRes, recipesRes, draftsRes] = await Promise.all([
+  const [postsRes, recipesRes, draftsRes, settingsRes] = await Promise.all([
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     db.from('recipes').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     db.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
+    db.from('site_settings').select('value').eq('key', 'coming_soon').single(),
   ])
+
+  const comingSoon = settingsRes.data?.value === 'true'
 
   const stats = [
     {
@@ -76,6 +80,9 @@ export default async function AdminDashboard() {
         <Link href="/admin/recipes/new" className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
           New Recipe
         </Link>
+        <div className="ml-auto">
+          <ComingSoonToggle initial={comingSoon} />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
