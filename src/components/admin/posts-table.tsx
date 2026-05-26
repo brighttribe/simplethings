@@ -43,6 +43,7 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
   const [qeTitle, setQeTitle] = useState('')
   const [qeSlug, setQeSlug] = useState('')
   const [qeStatus, setQeStatus] = useState('draft')
+  const [qePublishedAt, setQePublishedAt] = useState('')
   const [qeCategoryIds, setQeCategoryIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const slugManual = useRef(false)
@@ -54,6 +55,7 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
     setQeTitle(post.title)
     setQeSlug((post as PostRow & { slug?: string }).slug ?? '')
     setQeStatus(post.status)
+    setQePublishedAt((post.published_at ?? '').slice(0, 16))
     setQeCategoryIds(post.blog_post_categories.map(c => c.category_id))
     slugManual.current = false
     setOpenId(post.id)
@@ -77,7 +79,7 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
       fetch(`/api/posts/${openId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: qeTitle, slug: qeSlug, status: qeStatus }),
+        body: JSON.stringify({ title: qeTitle, slug: qeSlug, status: qeStatus, published_at: qePublishedAt || null }),
       }),
       fetch(`/api/posts/${openId}/categories`, {
         method: 'PUT',
@@ -96,7 +98,8 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
         <thead className="border-b border-gray-100 bg-gray-50">
           <tr>
             <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Title</th>
-            <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Homepage</th>
+            <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-14">Hero</th>
+            <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Featured</th>
             <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-24">Status</th>
             <th className="text-left px-4 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-28">Date</th>
             <th className="px-4 py-3 w-12" />
@@ -104,7 +107,7 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
         </thead>
         <tbody className="divide-y divide-gray-100">
           {posts.length === 0 && (
-            <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">No posts found</td></tr>
+            <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No posts found</td></tr>
           )}
           {posts.map(post => (
             <>
@@ -129,6 +132,19 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
                     heroPostId={heroPostId}
                     leftPostId={leftPostId}
                     rightPostId={rightPostId}
+                    part="hero"
+                  />
+                </td>
+                <td className="px-4 py-2.5">
+                  <HeroFeaturedToggle
+                    postId={post.id}
+                    isHero={post.is_hero ?? false}
+                    isFeatured={post.is_featured ?? false}
+                    featuredOrder={post.featured_order}
+                    heroPostId={heroPostId}
+                    leftPostId={leftPostId}
+                    rightPostId={rightPostId}
+                    part="featured"
                   />
                 </td>
                 <td className="px-4 py-2.5">
@@ -151,7 +167,7 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
               {/* Quick Edit panel */}
               {openId === post.id && (
                 <tr key={`qe-${post.id}`}>
-                  <td colSpan={5} className="p-0">
+                  <td colSpan={6} className="p-0">
                     <div className="bg-gray-50 border-y border-gray-200 px-6 py-4">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-0">
 
@@ -176,6 +192,11 @@ export function PostsTable({ posts, allCategories, heroPostId, leftPostId, right
                               <option value="scheduled">Scheduled</option>
                               <option value="published">Published</option>
                             </select>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <label className="w-12 text-xs text-gray-500 text-right shrink-0">Date</label>
+                            <input type="datetime-local" value={qePublishedAt} onChange={e => setQePublishedAt(e.target.value)}
+                              className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-gray-400 bg-white" />
                           </div>
                           <div className="flex gap-2 pl-15 pt-1" style={{ paddingLeft: '60px' }}>
                             <button onClick={handleSave} disabled={saving}

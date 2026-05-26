@@ -40,7 +40,6 @@ export default function SiteNav({ navCategories = [] }: { navCategories?: NavCat
     { label: 'Home', href: '/', children: undefined },
     { label: 'About', href: '/about', children: undefined },
     { label: 'Mood Boards', href: '/mood-boards', children: undefined },
-    { label: 'Recipes', href: '/recipes', children: undefined },
     ...topLevel.map(cat => {
       const children = navCategories
         .filter(c => c.parent_id === cat.id)
