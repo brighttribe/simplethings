@@ -106,7 +106,7 @@ export default async function HomePage() {
                       <Link href={`/blog/${post.slug}`}>
                         <h3 className="font-serif text-base font-semibold text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors">{post.title}</h3>
                       </Link>
-                      <p className="text-[11px] text-gray-400 mt-1">{cat?.name ?? ''} · {formatDate(post.published_at)}</p>
+                      {cat?.name && <p className="text-[11px] text-gray-400 mt-1">{cat.name}</p>}
                     </article>
                   )
                 })}

@@ -90,7 +90,6 @@ export default async function SearchPage({
                         </h2>
                       </Link>
                       {excerpt && <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{excerpt}</p>}
-                      <p className="text-[11px] text-gray-400 mt-1">{formatDate(post.published_at)}</p>
                     </div>
                   </article>
                 )
@@ -122,7 +121,6 @@ export default async function SearchPage({
                     {recipe.description && (
                       <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{recipe.description}</p>
                     )}
-                    <p className="text-[11px] text-gray-400 mt-1">{formatDate(recipe.published_at)}</p>
                   </div>
                 </article>
               ))}

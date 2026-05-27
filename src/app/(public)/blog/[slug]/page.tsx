@@ -142,8 +142,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </h1>
             <div className="flex items-center gap-3 text-xs text-gray-400 mb-5">
               <span>By Holly Dempsey</span>
-              <span>·</span>
-              <span>{formatDate(post.published_at)}</span>
             </div>
 
             {/* Hero image */}
@@ -219,7 +217,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors line-clamp-2">{p.title}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{formatDate(p.published_at)}</p>
                     </div>
                   </Link>
                 ))}
@@ -259,7 +256,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                       : <div className="w-full h-full bg-[#c8d9c5]" />}
                   </div>
                   <p className="font-serif text-sm font-semibold text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors">{p.title}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">{formatDate(p.published_at)}</p>
                 </Link>
               ))}
             </div>

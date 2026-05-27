@@ -110,7 +110,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                             {post.title}
                           </h2>
                         </Link>
-                        <p className="text-[11px] text-gray-400 mt-1">{formatDate(post.published_at)}</p>
                         {excerpt && (
                           <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-2">{excerpt}</p>
                         )}
@@ -174,7 +173,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[#1e1c19] leading-snug group-hover:text-[#3d5c3a] transition-colors line-clamp-2">{p.title}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{formatDate(p.published_at)}</p>
                     </div>
                   </Link>
                 ))}
